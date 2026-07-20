@@ -176,8 +176,8 @@ MAX_HISTORY_TURNS = 6
 # ==========================================================
 
 splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=150
+    chunk_size=600,
+    chunk_overlap=100
 )
 
 # The PDF runbook packs many short bullet lists (Set 1, Set 2, Set 3...)
@@ -319,13 +319,17 @@ print()
 # ==========================================================
 
 bm25_retriever = BM25Retriever.from_documents(docs)
-bm25_retriever.k = 8
+bm25_retriever.k = 6
 
+# search_type="mmr" deliberately trades relevance for diversity (it wants
+# results that differ from each other). That's the opposite of what
+# context_precision rewards, which is "every retrieved chunk is actually
+# relevant". Plain similarity search ranks purely by closeness to the
+# query, which is what we want feeding into the reranker.
 vector_retriever = vectorstore.as_retriever(
-    search_type="mmr",
+    search_type="similarity",
     search_kwargs={
-        "k": 8,
-        "fetch_k": 20
+        "k": 6
     }
 )
 
@@ -347,20 +351,8 @@ cross_encoder = HuggingFaceCrossEncoder(
 
 
 class ScoringCrossEncoderReranker(CrossEncoderReranker):
-    """
-    Identical to LangChain's CrossEncoderReranker, except it also writes
-    each document's cross-encoder relevance score into
-    doc.metadata["rerank_score"].
-
-    Why: the stock CrossEncoderReranker sorts documents by score and
-    slices to top_n, but discards the scores themselves. That means
-    every document handed to the LLM — including low-scoring ones that
-    only made the cut because top_n was raised for better recall —
-    looks identical downstream. build_citations() in guardrails.py uses
-    rerank_score to only cite sources the reranker actually judged
-    relevant to the question, rather than every chunk that happened to
-    ride along in the context window.
-    """
+   
+    min_score: float = 0.0
 
     def compress_documents(self, documents, query, callbacks=None):
         scores = self.model.score([(query, doc.page_content) for doc in documents])
@@ -369,15 +361,28 @@ class ScoringCrossEncoderReranker(CrossEncoderReranker):
 
         top_docs = []
         for doc, score in scored_docs[: self.top_n]:
+            if score < self.min_score and top_docs:
+                # Already have at least one relevant doc — stop padding
+                # with weak ones. (We never return zero docs: the first,
+                # highest-scoring doc is always kept even if it's below
+                # threshold, so context_recall doesn't collapse on a
+                # genuinely hard question.)
+                break
             doc.metadata = {**doc.metadata, "rerank_score": float(score)}
             top_docs.append(doc)
 
         return top_docs
 
 
+# min_score of 0.0 on BAAI/bge-reranker-base's raw logit output is a rough
+# "roughly as likely relevant as not" cutoff. Log the scores from a few
+# real queries (doc.metadata["rerank_score"]) and adjust this threshold
+# up if you're still seeing weak chunks pass through, or down if good
+# chunks are getting cut on harder questions.
 reranker = ScoringCrossEncoderReranker(
     model=cross_encoder,
-    top_n=5
+    top_n=3,
+    min_score=0.0
 )
 
 reranked_retriever = ContextualCompressionRetriever(
