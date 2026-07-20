@@ -16,7 +16,7 @@ This project solves that problem by building an AI assistant that retrieves rele
 
 - Hybrid Search (BM25 + Vector Search)
 - ChromaDB Vector Database
-- MMR (Maximum Marginal Relevance) Retrieval
+- Similarity Retrieval
 - Cross-Encoder Reranking
 - History-Aware Conversational Retrieval
 - Prompt Injection Protection
@@ -47,7 +47,7 @@ This project solves that problem by building an AI assistant that retrieves rele
                          ▼
                  Ensemble Retriever
                          ▼
-                  MMR Retrieval
+                  Similarity Retrieval
                          ▼
               Cross Encoder Reranker
                          ▼
@@ -90,7 +90,7 @@ This project solves that problem by building an AI assistant that retrieves rele
 - Hybrid Search
 - BM25
 - Dense Retrieval
-- Maximum Marginal Relevance (MMR)
+- Similarity Retrieval
 
 ### Reranking
 
