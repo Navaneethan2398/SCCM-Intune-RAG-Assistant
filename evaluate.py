@@ -62,8 +62,8 @@ ragas_embeddings = LangchainEmbeddingsWrapper(embeddings)
 print("Loading evaluation dataset...")
 
 df = pd.read_csv("evaluation_dataset.csv")
-BATCH_START =0
-BATCH_END = 5
+BATCH_START =11
+BATCH_END = 15
 df = df.iloc[BATCH_START:BATCH_END].reset_index(drop=True)
 
 questions = []
