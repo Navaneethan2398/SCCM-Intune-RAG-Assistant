@@ -185,9 +185,9 @@ Example Results
 
 | Metric | Score |
 |----------|---------|
-| Faithfulness | 0.93 |
-| Answer Relevancy | 0.81 |
-| Context Precision | 1.00 |
+| Faithfulness | 1.00 |
+| Answer Relevancy | 0.86 |
+| Context Precision | 0.91 |
 | Context Recall | 1.00 |
 
 ---
