@@ -237,7 +237,7 @@ GitHub:
 https://github.com/Navaneethan2398
 
 LinkedIn:
-(Add your LinkedIn URL)
+https://www.linkedin.com/in/navaneethan98
 
 ---
 
